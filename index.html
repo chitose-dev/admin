@@ -783,10 +783,18 @@
                     <div class="form-group">
                         <label>使用モデル</label>
                         <select id="planModel">
-                            <option value="gpt-4o">GPT-4o（推奨）</option>
-                            <option value="gpt-4o-mini">GPT-4o-mini（高速）</option>
-                            <option value="o1">o1（推論モデル）</option>
-                            <option value="o1-mini">o1-mini</option>
+                            <optgroup label="GPT-5シリーズ（最新）">
+                                <option value="gpt-5.1">GPT-5.1</option>
+                                <option value="gpt-5">GPT-5</option>
+                            </optgroup>
+                            <optgroup label="GPT-4oシリーズ（推奨）">
+                                <option value="gpt-4o">GPT-4o</option>
+                                <option value="gpt-4o-mini">GPT-4o-mini</option>
+                            </optgroup>
+                            <optgroup label="o1シリーズ（推論モデル）">
+                                <option value="o1">o1</option>
+                                <option value="o1-mini">o1-mini</option>
+                            </optgroup>
                         </select>
                     </div>
                     
@@ -805,8 +813,20 @@
                         </div>
                         <div id="emailFields" class="hidden">
                             <div class="form-group">
+                                <label>送信頻度</label>
+                                <select id="emailFrequency" onchange="toggleEmailCustomFields()">
+                                    <option value="daily">毎日</option>
+                                    <option value="custom">カスタム指定</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
                                 <label>送信時刻</label>
                                 <input type="time" id="emailSendTime" value="09:00">
+                            </div>
+                            <div id="emailCustomFields" class="form-group hidden">
+                                <label>カスタム日付用スプレッドシートID</label>
+                                <input type="text" id="emailCustomSpreadsheetId" placeholder="A列にYYYY-MM-DD形式で日付を入力">
+                                <small>指定した日付のみ送信されます</small>
                             </div>
                         </div>
                     </div>
@@ -820,8 +840,29 @@
                         </div>
                         <div id="noteFields" class="hidden">
                             <div class="form-group">
+                                <label>NOTEアカウント（このプラン専用）</label>
+                                <input type="email" id="planNoteEmail" placeholder="このプラン専用のNOTEメールアドレス（オプション）">
+                                <small>空欄の場合はグローバル設定のアカウントを使用</small>
+                            </div>
+                            <div class="form-group">
+                                <label>NOTEパスワード</label>
+                                <input type="password" id="planNotePassword" placeholder="パスワード">
+                            </div>
+                            <div class="form-group">
+                                <label>投稿頻度</label>
+                                <select id="noteFrequency" onchange="toggleNoteCustomFields()">
+                                    <option value="daily">毎日</option>
+                                    <option value="custom">カスタム指定</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
                                 <label>投稿時刻</label>
                                 <input type="time" id="notePostTime" value="09:00">
+                            </div>
+                            <div id="noteCustomFields" class="form-group hidden">
+                                <label>カスタム日付用スプレッドシートID</label>
+                                <input type="text" id="noteCustomSpreadsheetId" placeholder="A列にYYYY-MM-DD形式で日付を入力">
+                                <small>指定した日付のみ投稿されます</small>
                             </div>
                             <div class="form-group">
                                 <label>サムネイル画像URLマッピング（オプション）</label>
