@@ -554,13 +554,23 @@ async function loadPlanCustomers(planId, searchQuery = '') {
 
 // プラン追加モーダル表示
 function showAddPlanModal() {
+    console.log('🆕 プラン追加モーダルを開きます');
     document.getElementById('planModalTitle').textContent = 'プラン追加';
     document.getElementById('planForm').reset();
     document.getElementById('planId').value = '';
     document.getElementById('planModel').value = 'gpt-4o';
+    
+    // 頻度フィールドの初期化
+    document.getElementById('emailFrequency').value = 'daily';
+    document.getElementById('noteFrequency').value = 'daily';
+    
     toggleEmailFields();
     toggleNoteFields();
+    toggleEmailCustomFields();
+    toggleNoteCustomFields();
+    
     document.getElementById('planModal').classList.add('active');
+    console.log('✅ プラン追加モーダルを開きました');
 }
 
 // プラン編集
@@ -611,11 +621,15 @@ function editPlanFromDetail() {
 
 // プラン保存
 async function savePlan() {
+    console.log('🔵 savePlan関数が呼ばれました');
+    
     const id = document.getElementById('planId').value;
     const name = document.getElementById('planName').value;
     const prompt = document.getElementById('planPrompt').value;
     const model = document.getElementById('planModel').value;
     const externalDataPath = document.getElementById('externalDataPath').value;
+    
+    console.log('📝 基本情報取得:', { id, name, model });
     
     const emailEnabled = document.getElementById('emailEnabled').checked;
     const emailFrequency = document.getElementById('emailFrequency').value;
@@ -629,6 +643,9 @@ async function savePlan() {
     const thumbnailMapping = document.getElementById('thumbnailMapping').value;
     const planNoteEmail = document.getElementById('planNoteEmail').value;
     const planNotePassword = document.getElementById('planNotePassword').value;
+
+    console.log('📧 メール設定:', { emailEnabled, emailFrequency });
+    console.log('📝 NOTE設定:', { noteEnabled, noteFrequency });
 
     if (!name) {
         alert('プラン名を入力してください');
@@ -663,17 +680,22 @@ async function savePlan() {
         }
     }
 
+    console.log('📦 送信データ:', data);
+
     try {
+        console.log('🚀 API呼び出し開始');
         if (id) {
             await apiCall(`/api/plans/${id}`, 'PUT', data);
         } else {
             await apiCall('/api/plans', 'POST', data);
         }
         
+        console.log('✅ API呼び出し成功');
         document.getElementById('planModal').classList.remove('active');
         loadPlans();
         alert('プランを保存しました');
     } catch (error) {
+        console.error('❌ API呼び出しエラー:', error);
         alert(error.message);
     }
 }
@@ -1096,32 +1118,63 @@ document.addEventListener('DOMContentLoaded', async function() {
     });
 
     // ログインフォーム
-    document.getElementById('loginForm').addEventListener('submit', handleLogin);
+    const loginForm = document.getElementById('loginForm');
+    if (loginForm) {
+        loginForm.addEventListener('submit', handleLogin);
+    }
 
     // ログアウト
-    document.getElementById('logoutBtn').addEventListener('click', function() {
-        if (confirm('ログアウトしますか?')) {
-            logout();
-        }
-    });
+    const logoutBtn = document.getElementById('logoutBtn');
+    if (logoutBtn) {
+        logoutBtn.addEventListener('click', function() {
+            if (confirm('ログアウトしますか?')) {
+                logout();
+            }
+        });
+    }
 
     // パスワード変更
-    document.getElementById('passwordChangeForm').addEventListener('submit', handlePasswordChange);
+    const passwordChangeForm = document.getElementById('passwordChangeForm');
+    if (passwordChangeForm) {
+        passwordChangeForm.addEventListener('submit', handlePasswordChange);
+    }
 
     // OpenAI API設定
-    document.getElementById('openaiApiForm').addEventListener('submit', handleOpenAIApiSave);
+    const openaiApiForm = document.getElementById('openaiApiForm');
+    if (openaiApiForm) {
+        openaiApiForm.addEventListener('submit', handleOpenAIApiSave);
+    }
 
     // NOTE認証設定
-    document.getElementById('noteAuthForm').addEventListener('submit', handleNoteAuthSave);
+    const noteAuthForm = document.getElementById('noteAuthForm');
+    if (noteAuthForm) {
+        noteAuthForm.addEventListener('submit', handleNoteAuthSave);
+    }
 
     // Scheduler同期
-    document.getElementById('syncSchedulerBtn').addEventListener('click', syncSchedulerJobs);
+    const syncSchedulerBtn = document.getElementById('syncSchedulerBtn');
+    if (syncSchedulerBtn) {
+        syncSchedulerBtn.addEventListener('click', syncSchedulerJobs);
+    }
 
     // チェックボックスの変更イベント
-    document.getElementById('emailEnabled').addEventListener('change', toggleEmailFields);
-    document.getElementById('emailFrequency').addEventListener('change', toggleEmailCustomFields);
-    document.getElementById('noteEnabled').addEventListener('change', toggleNoteFields);
-    document.getElementById('noteFrequency').addEventListener('change', toggleNoteCustomFields);
+    const emailEnabledEl = document.getElementById('emailEnabled');
+    const emailFrequencyEl = document.getElementById('emailFrequency');
+    const noteEnabledEl = document.getElementById('noteEnabled');
+    const noteFrequencyEl = document.getElementById('noteFrequency');
+    
+    if (emailEnabledEl) {
+        emailEnabledEl.addEventListener('change', toggleEmailFields);
+    }
+    if (emailFrequencyEl) {
+        emailFrequencyEl.addEventListener('change', toggleEmailCustomFields);
+    }
+    if (noteEnabledEl) {
+        noteEnabledEl.addEventListener('change', toggleNoteFields);
+    }
+    if (noteFrequencyEl) {
+        noteFrequencyEl.addEventListener('change', toggleNoteCustomFields);
+    }
 
     // フィルターボタン
     document.querySelectorAll('#statusFilters .filter-btn').forEach(btn => {
@@ -1144,53 +1197,120 @@ document.addEventListener('DOMContentLoaded', async function() {
     });
 
     // プラン関連
-    document.getElementById('addPlanBtn').addEventListener('click', showAddPlanModal);
-    document.getElementById('savePlanBtn').addEventListener('click', savePlan);
-    document.getElementById('closePlanModalBtn').addEventListener('click', function() {
-        document.getElementById('planModal').classList.remove('active');
+    const addPlanBtn = document.getElementById('addPlanBtn');
+    const savePlanBtn = document.getElementById('savePlanBtn');
+    const closePlanModalBtn = document.getElementById('closePlanModalBtn');
+    const closePlanModalBtn2 = document.getElementById('closePlanModalBtn2');
+    
+    console.log('🔍 プランボタン要素チェック:', {
+        addPlanBtn: !!addPlanBtn,
+        savePlanBtn: !!savePlanBtn,
+        closePlanModalBtn: !!closePlanModalBtn,
+        closePlanModalBtn2: !!closePlanModalBtn2
     });
-    document.getElementById('closePlanModalBtn2').addEventListener('click', function() {
-        document.getElementById('planModal').classList.remove('active');
-    });
+    
+    if (addPlanBtn) {
+        addPlanBtn.addEventListener('click', showAddPlanModal);
+        console.log('✅ addPlanBtn イベントリスナー登録');
+    } else {
+        console.warn('⚠️ addPlanBtn が見つかりません');
+    }
+    
+    if (savePlanBtn) {
+        savePlanBtn.addEventListener('click', () => {
+            console.log('🖱️ savePlanBtn がクリックされました');
+            savePlan();
+        });
+        console.log('✅ savePlanBtn イベントリスナー登録');
+    } else {
+        console.warn('⚠️ savePlanBtn が見つかりません');
+    }
+    
+    if (closePlanModalBtn) {
+        closePlanModalBtn.addEventListener('click', function() {
+            document.getElementById('planModal').classList.remove('active');
+        });
+    }
+    if (closePlanModalBtn2) {
+        closePlanModalBtn2.addEventListener('click', function() {
+            document.getElementById('planModal').classList.remove('active');
+        });
+    }
 
     // 申請者詳細モーダル
-    document.getElementById('closeAppDetailBtn').addEventListener('click', function() {
-        document.getElementById('applicationDetailModal').classList.remove('active');
-    });
-    document.getElementById('closeAppDetailBtn2').addEventListener('click', function() {
-        document.getElementById('applicationDetailModal').classList.remove('active');
-    });
+    const closeAppDetailBtn = document.getElementById('closeAppDetailBtn');
+    const closeAppDetailBtn2 = document.getElementById('closeAppDetailBtn2');
+    
+    if (closeAppDetailBtn) {
+        closeAppDetailBtn.addEventListener('click', function() {
+            document.getElementById('applicationDetailModal').classList.remove('active');
+        });
+    }
+    if (closeAppDetailBtn2) {
+        closeAppDetailBtn2.addEventListener('click', function() {
+            document.getElementById('applicationDetailModal').classList.remove('active');
+        });
+    }
 
     // プラン詳細モーダル
-    document.getElementById('closePlanDetailBtn').addEventListener('click', function() {
-        document.getElementById('planDetailModal').classList.remove('active');
-    });
-    document.getElementById('closePlanDetailBtn2').addEventListener('click', function() {
-        document.getElementById('planDetailModal').classList.remove('active');
-    });
+    const closePlanDetailBtn = document.getElementById('closePlanDetailBtn');
+    const closePlanDetailBtn2 = document.getElementById('closePlanDetailBtn2');
+    
+    if (closePlanDetailBtn) {
+        closePlanDetailBtn.addEventListener('click', function() {
+            document.getElementById('planDetailModal').classList.remove('active');
+        });
+    }
+    if (closePlanDetailBtn2) {
+        closePlanDetailBtn2.addEventListener('click', function() {
+            document.getElementById('planDetailModal').classList.remove('active');
+        });
+    }
 
     // プラン加入者検索
-    document.getElementById('planCustomerSearch').addEventListener('input', function() {
-        if (currentPlanId) {
-            loadPlanCustomers(currentPlanId, this.value);
-        }
-    });
+    const planCustomerSearch = document.getElementById('planCustomerSearch');
+    if (planCustomerSearch) {
+        planCustomerSearch.addEventListener('input', function() {
+            if (currentPlanId) {
+                loadPlanCustomers(currentPlanId, this.value);
+            }
+        });
+    }
 
     // スタッフ関連
-    document.getElementById('addStaffBtn').addEventListener('click', showAddStaffModal);
-    document.getElementById('saveStaffBtn').addEventListener('click', saveStaff);
-    document.getElementById('closeStaffModalBtn').addEventListener('click', function() {
-        document.getElementById('staffModal').classList.remove('active');
-    });
-    document.getElementById('closeStaffModalBtn2').addEventListener('click', function() {
-        document.getElementById('staffModal').classList.remove('active');
-    });
+    const addStaffBtn = document.getElementById('addStaffBtn');
+    const saveStaffBtn = document.getElementById('saveStaffBtn');
+    const closeStaffModalBtn = document.getElementById('closeStaffModalBtn');
+    const closeStaffModalBtn2 = document.getElementById('closeStaffModalBtn2');
+    
+    if (addStaffBtn) {
+        addStaffBtn.addEventListener('click', showAddStaffModal);
+    }
+    if (saveStaffBtn) {
+        saveStaffBtn.addEventListener('click', saveStaff);
+    }
+    if (closeStaffModalBtn) {
+        closeStaffModalBtn.addEventListener('click', function() {
+            document.getElementById('staffModal').classList.remove('active');
+        });
+    }
+    if (closeStaffModalBtn2) {
+        closeStaffModalBtn2.addEventListener('click', function() {
+            document.getElementById('staffModal').classList.remove('active');
+        });
+    }
 
     // 日付フィルター
-    document.getElementById('historyDateFilter').addEventListener('change', function() {
-        loadHistory(this.value, currentHistoryTypeFilter);
-    });
+    const historyDateFilter = document.getElementById('historyDateFilter');
+    if (historyDateFilter) {
+        historyDateFilter.addEventListener('change', function() {
+            loadHistory(this.value, currentHistoryTypeFilter);
+        });
+    }
 
     // 手動メール送信
-    document.getElementById('manualSendForm').addEventListener('submit', handleManualSend);
+    const manualSendForm = document.getElementById('manualSendForm');
+    if (manualSendForm) {
+        manualSendForm.addEventListener('submit', handleManualSend);
+    }
 });
