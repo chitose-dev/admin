@@ -824,6 +824,31 @@ async function handleManualSend(event) {
 // 設定
 // ========================================
 
+// Scheduler同期
+async function syncSchedulerJobs() {
+    const messageDiv = document.getElementById('schedulerSyncMessage');
+    const btn = document.getElementById('syncSchedulerBtn');
+    
+    messageDiv.classList.add('hidden');
+    messageDiv.textContent = '';
+    btn.disabled = true;
+    btn.textContent = '同期中...';
+    
+    try {
+        const result = await apiCall('/api/scheduler/sync', 'POST');
+        
+        messageDiv.textContent = result.message;
+        messageDiv.className = 'success-message';
+        btn.textContent = 'Schedulerジョブを同期';
+    } catch (error) {
+        messageDiv.textContent = error.message;
+        messageDiv.className = 'error-message';
+        btn.textContent = 'Schedulerジョブを同期';
+    } finally {
+        btn.disabled = false;
+    }
+}
+
 // 設定読み込み
 async function loadSettings() {
     try {
@@ -1088,6 +1113,9 @@ document.addEventListener('DOMContentLoaded', async function() {
 
     // NOTE認証設定
     document.getElementById('noteAuthForm').addEventListener('submit', handleNoteAuthSave);
+
+    // Scheduler同期
+    document.getElementById('syncSchedulerBtn').addEventListener('click', syncSchedulerJobs);
 
     // チェックボックスの変更イベント
     document.getElementById('emailEnabled').addEventListener('change', toggleEmailFields);
