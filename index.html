@@ -1,0 +1,910 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GPTsメール送信システム v5.0 - 管理画面</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: #ffffff;
+            color: #000000;
+        }
+
+        /* ログイン画面 */
+        .login-container {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .login-box {
+            background: white;
+            border: 2px solid #000;
+            padding: 40px;
+            width: 100%;
+            max-width: 400px;
+        }
+
+        .login-box h1 {
+            margin-bottom: 30px;
+            font-size: 24px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+        }
+
+        .form-group input,
+        .form-group textarea,
+        .form-group select {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #000;
+            font-size: 14px;
+        }
+
+        .form-group textarea {
+            resize: vertical;
+            min-height: 100px;
+        }
+
+        .form-group small {
+            font-size: 12px;
+            color: #666;
+            display: block;
+            margin-top: 5px;
+        }
+
+        .btn {
+            padding: 10px 20px;
+            background: #000;
+            color: #fff;
+            border: none;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 600;
+        }
+
+        .btn:hover {
+            background: #333;
+        }
+
+        .btn-secondary {
+            background: #fff;
+            color: #000;
+            border: 1px solid #000;
+        }
+
+        .btn-secondary:hover {
+            background: #f0f0f0;
+        }
+
+        .btn-danger {
+            background: #dc3545;
+        }
+
+        .btn-danger:hover {
+            background: #c82333;
+        }
+
+        /* メインレイアウト */
+        .main-container {
+            display: none;
+        }
+
+        .main-container.active {
+            display: flex;
+            min-height: 100vh;
+        }
+
+        /* サイドバー */
+        .sidebar {
+            width: 250px;
+            background: #000;
+            color: #fff;
+            padding: 20px 0;
+            position: fixed;
+            height: 100vh;
+            overflow-y: auto;
+            z-index: 100;
+            transition: transform 0.3s ease;
+        }
+
+        .sidebar-header {
+            padding: 0 20px 20px;
+            border-bottom: 1px solid #333;
+        }
+
+        .sidebar-header h2 {
+            font-size: 18px;
+        }
+
+        .sidebar-menu {
+            list-style: none;
+            padding: 20px 0;
+        }
+
+        .sidebar-menu li {
+            padding: 12px 20px;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .sidebar-menu li:hover {
+            background: #333;
+        }
+
+        .sidebar-menu li.active {
+            background: #fff;
+            color: #000;
+        }
+
+        .logout-btn {
+            margin: 20px;
+        }
+
+        /* ハンバーガーメニュー */
+        .hamburger {
+            display: none;
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            z-index: 200;
+            background: #000;
+            color: #fff;
+            border: none;
+            padding: 10px 15px;
+            cursor: pointer;
+            font-size: 24px;
+            transition: opacity 0.3s ease;
+        }
+
+        .hamburger:hover {
+            background: #333;
+        }
+
+        .hamburger.hidden {
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        .mobile-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 90;
+        }
+
+        .mobile-overlay.active {
+            display: block;
+        }
+
+        /* コンテンツエリア */
+        .content {
+            margin-left: 250px;
+            padding: 30px;
+            flex: 1;
+        }
+
+        .content-header {
+            margin-bottom: 30px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #000;
+        }
+
+        .content-header h1 {
+            font-size: 28px;
+        }
+
+        /* カード */
+        .card {
+            background: #fff;
+            border: 1px solid #000;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid #ddd;
+        }
+
+        .card-header h2 {
+            font-size: 20px;
+        }
+
+        /* テーブル */
+        .table-container {
+            overflow-x: auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        table th,
+        table td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+        }
+
+        table th {
+            background: #000;
+            color: #fff;
+            font-weight: 600;
+        }
+
+        table tr:hover {
+            background: #f5f5f5;
+        }
+
+        /* フィルター */
+        .filters {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+
+        .filter-btn {
+            padding: 8px 16px;
+            border: 1px solid #000;
+            background: #fff;
+            cursor: pointer;
+            font-size: 14px;
+        }
+
+        .filter-btn.active {
+            background: #000;
+            color: #fff;
+        }
+
+        /* モーダル */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .modal.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background: #fff;
+            border: 2px solid #000;
+            padding: 30px;
+            width: 100%;
+            max-width: 600px;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #000;
+        }
+
+        .modal-header h2 {
+            font-size: 22px;
+        }
+
+        .close-btn {
+            cursor: pointer;
+            font-size: 24px;
+            font-weight: bold;
+            border: none;
+            background: none;
+        }
+
+        .modal-body {
+            margin-bottom: 20px;
+        }
+
+        .modal-footer {
+            display: flex;
+            gap: 10px;
+            justify-content: flex-end;
+        }
+
+        /* バッジ */
+        .badge {
+            display: inline-block;
+            padding: 4px 8px;
+            font-size: 12px;
+            font-weight: 600;
+            border: 1px solid #000;
+        }
+
+        .badge-pending {
+            background: #fff3cd;
+            border-color: #ffc107;
+        }
+
+        .badge-approved {
+            background: #d4edda;
+            border-color: #28a745;
+        }
+
+        .badge-rejected {
+            background: #f8d7da;
+            border-color: #dc3545;
+        }
+
+        .badge-cancelled {
+            background: #e2e3e5;
+            border-color: #6c757d;
+        }
+
+        /* アクションボタン */
+        .action-btns {
+            display: flex;
+            gap: 5px;
+        }
+
+        .action-btn {
+            padding: 6px 12px;
+            font-size: 12px;
+            border: 1px solid #000;
+            background: #fff;
+            cursor: pointer;
+        }
+
+        .action-btn:hover {
+            background: #f0f0f0;
+        }
+
+        /* プランカード */
+        .plan-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 20px;
+        }
+
+        .plan-card {
+            border: 2px solid #000;
+            padding: 20px;
+        }
+
+        .plan-card h3 {
+            font-size: 20px;
+            margin-bottom: 15px;
+        }
+
+        .plan-details {
+            margin: 15px 0;
+        }
+
+        .plan-details p {
+            margin-bottom: 8px;
+            font-size: 14px;
+        }
+
+        .plan-details strong {
+            font-weight: 600;
+        }
+
+        .plan-actions {
+            display: flex;
+            gap: 10px;
+            margin-top: 15px;
+        }
+
+        /* レスポンシブ */
+        @media (max-width: 768px) {
+            .hamburger {
+                display: block;
+            }
+
+            .sidebar {
+                transform: translateX(-100%);
+            }
+
+            .sidebar.active {
+                transform: translateX(0);
+            }
+
+            .content {
+                margin-left: 0;
+                padding: 80px 20px 30px;
+            }
+
+            .main-container {
+                flex-direction: column;
+            }
+
+            .plan-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .filters {
+                flex-direction: column;
+            }
+
+            .filter-btn {
+                width: 100%;
+            }
+
+            table {
+                font-size: 12px;
+            }
+
+            table th,
+            table td {
+                padding: 8px;
+            }
+
+            .modal-content {
+                padding: 20px;
+            }
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        .form-group label input[type="checkbox"] {
+            margin-right: 8px;
+            vertical-align: middle;
+            width: auto;
+            padding: 0;
+        }
+
+        .info-row {
+            display: flex;
+            padding: 10px 0;
+            border-bottom: 1px solid #eee;
+        }
+
+        .info-row:last-child {
+            border-bottom: none;
+        }
+
+        .info-label {
+            font-weight: 600;
+            width: 150px;
+        }
+
+        .info-value {
+            flex: 1;
+        }
+
+        .error-message {
+            color: #dc3545;
+            font-size: 14px;
+            margin-top: 10px;
+        }
+
+        .success-message {
+            color: #28a745;
+            font-size: 14px;
+            margin-top: 10px;
+        }
+
+        .loading {
+            opacity: 0.6;
+            pointer-events: none;
+        }
+    </style>
+</head>
+<body>
+    <!-- ログイン画面 -->
+    <div id="loginScreen" class="login-container">
+        <div class="login-box">
+            <h1>管理画面ログイン</h1>
+            <form id="loginForm">
+                <div class="form-group">
+                    <label>ユーザーID</label>
+                    <input type="text" id="loginId" required>
+                </div>
+                <div class="form-group">
+                    <label>パスワード</label>
+                    <input type="password" id="loginPassword" required>
+                </div>
+                <div id="loginError" class="error-message hidden"></div>
+                <button type="submit" class="btn" style="width: 100%; margin-top: 10px;">ログイン</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- メイン管理画面 -->
+    <div id="mainScreen" class="main-container">
+        <!-- ハンバーガーメニューボタン -->
+        <button class="hamburger" id="hamburgerBtn">☰</button>
+
+        <!-- モバイル用オーバーレイ -->
+        <div class="mobile-overlay" id="mobileOverlay"></div>
+
+        <!-- サイドバー -->
+        <div class="sidebar" id="sidebar">
+            <div class="sidebar-header">
+                <h2>管理画面 v5.0</h2>
+            </div>
+            <ul class="sidebar-menu" id="sidebarMenu">
+                <li data-page="applications" class="active">申請者管理</li>
+                <li data-page="plans">プラン管理</li>
+                <li data-page="history">送信履歴</li>
+                <li data-page="manual-send">手動メール送信</li>
+                <li data-page="settings">設定</li>
+            </ul>
+            <button class="btn logout-btn" id="logoutBtn">ログアウト</button>
+        </div>
+
+        <!-- コンテンツエリア -->
+        <div class="content">
+            <!-- 申請者管理 -->
+            <div id="applications" class="page-content">
+                <div class="content-header">
+                    <h1>申請者管理</h1>
+                </div>
+                <div class="card">
+                    <div class="filters" id="statusFilters">
+                        <button class="filter-btn active" data-status="all">全て</button>
+                        <button class="filter-btn" data-status="pending">承認待ち</button>
+                        <button class="filter-btn" data-status="approved">承認済み</button>
+                        <button class="filter-btn" data-status="rejected">却下</button>
+                        <button class="filter-btn" data-status="cancelled">解約済み</button>
+                    </div>
+                    <div class="table-container">
+                        <table id="applicationsTable">
+                            <thead>
+                                <tr>
+                                    <th>会員番号</th>
+                                    <th>氏名</th>
+                                    <th>ステータス</th>
+                                    <th>プラン</th>
+                                    <th>申請日</th>
+                                    <th>操作</th>
+                                </tr>
+                            </thead>
+                            <tbody></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- プラン管理 -->
+            <div id="plans" class="page-content hidden">
+                <div class="content-header">
+                    <h1>プラン管理</h1>
+                </div>
+                <button class="btn" id="addPlanBtn" style="margin-bottom: 20px;">新規プラン追加</button>
+                <div class="plan-grid" id="planGrid"></div>
+            </div>
+
+            <!-- 送信履歴 -->
+            <div id="history" class="page-content hidden">
+                <div class="content-header">
+                    <h1>送信履歴</h1>
+                </div>
+                <div class="card">
+                    <div class="filters" style="margin-bottom: 20px;">
+                        <button class="filter-btn active" data-history-type="all">全て</button>
+                        <button class="filter-btn" data-history-type="scheduled-email">定時メール</button>
+                        <button class="filter-btn" data-history-type="manual">手動メール</button>
+                        <button class="filter-btn" data-history-type="scheduled-note">NOTE投稿</button>
+                    </div>
+                    <div class="form-group" style="max-width: 300px; margin-bottom: 20px;">
+                        <label>日付絞り込み</label>
+                        <input type="date" id="historyDateFilter">
+                    </div>
+                    <div class="table-container">
+                        <table id="historyTable">
+                            <thead>
+                                <tr>
+                                    <th>送信日時</th>
+                                    <th>プラン</th>
+                                    <th>タイプ</th>
+                                    <th>送信数</th>
+                                    <th>ステータス</th>
+                                    <th>操作</th>
+                                </tr>
+                            </thead>
+                            <tbody></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 手動メール送信 -->
+            <div id="manual-send" class="page-content hidden">
+                <div class="content-header">
+                    <h1>手動メール送信</h1>
+                </div>
+                <div class="card">
+                    <form id="manualSendForm">
+                        <div class="form-group">
+                            <label>対象プラン</label>
+                            <select id="manualSendPlan" required></select>
+                        </div>
+                        <div class="form-group">
+                            <label>件名</label>
+                            <input type="text" id="manualSendSubject" required>
+                        </div>
+                        <div class="form-group">
+                            <label>本文</label>
+                            <textarea id="manualSendBody" required placeholder="変数: {name-l}=姓, {name-f}=名, {birthday}=生年月日"></textarea>
+                        </div>
+                        <button type="submit" class="btn">送信</button>
+                    </form>
+                </div>
+            </div>
+
+            <!-- 設定 -->
+            <div id="settings" class="page-content hidden">
+                <div class="content-header">
+                    <h1>設定</h1>
+                </div>
+                
+                <div class="card">
+                    <h2>パスワード変更</h2>
+                    <form id="passwordChangeForm">
+                        <div class="form-group">
+                            <label>ユーザーID</label>
+                            <input type="text" id="changePasswordUserId" required>
+                        </div>
+                        <div class="form-group">
+                            <label>現在のパスワード</label>
+                            <input type="password" id="currentPassword" required>
+                        </div>
+                        <div class="form-group">
+                            <label>新しいパスワード</label>
+                            <input type="password" id="newPassword" required>
+                        </div>
+                        <div id="passwordChangeMessage" class="hidden"></div>
+                        <button type="submit" class="btn">変更</button>
+                    </form>
+                </div>
+
+                <div class="card">
+                    <h2>OpenAI API 設定</h2>
+                    <form id="openaiApiForm">
+                        <div class="form-group">
+                            <label>OpenAI API Key</label>
+                            <input type="text" id="openaiApiKey" placeholder="sk-...">
+                            <small>メール本文・NOTE記事の自動生成に必要です</small>
+                        </div>
+                        <div id="openaiApiMessage" class="hidden"></div>
+                        <button type="submit" class="btn">保存</button>
+                    </form>
+                </div>
+
+                <div class="card">
+                    <h2>NOTE認証設定</h2>
+                    <form id="noteAuthForm">
+                        <div class="form-group">
+                            <label>NOTEメールアドレス</label>
+                            <input type="email" id="noteEmail" placeholder="your_email@example.com">
+                        </div>
+                        <div class="form-group">
+                            <label>NOTEパスワード</label>
+                            <input type="password" id="notePassword" placeholder="パスワードを入力">
+                        </div>
+                        <div id="noteAuthMessage" class="hidden"></div>
+                        <button type="submit" class="btn">保存</button>
+                    </form>
+                </div>
+                
+                <div class="card">
+                    <div class="card-header">
+                        <h2>スタッフ管理</h2>
+                        <button class="btn" id="addStaffBtn">スタッフ追加</button>
+                    </div>
+                    <div class="table-container">
+                        <table id="staffTable">
+                            <thead>
+                                <tr>
+                                    <th>氏名</th>
+                                    <th>メールアドレス</th>
+                                    <th>操作</th>
+                                </tr>
+                            </thead>
+                            <tbody></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 申請者詳細モーダル -->
+    <div id="applicationDetailModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>申請者詳細</h2>
+                <button class="close-btn" id="closeAppDetailBtn">&times;</button>
+            </div>
+            <div class="modal-body" id="applicationDetailBody"></div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" id="closeAppDetailBtn2">閉じる</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- プラン追加/編集モーダル -->
+    <div id="planModal" class="modal">
+        <div class="modal-content" style="max-width: 800px;">
+            <div class="modal-header">
+                <h2 id="planModalTitle">プラン追加</h2>
+                <button class="close-btn" id="closePlanModalBtn">&times;</button>
+            </div>
+            <div class="modal-body">
+                <form id="planForm">
+                    <input type="hidden" id="planId">
+                    
+                    <div class="form-group">
+                        <label>プラン名</label>
+                        <input type="text" id="planName" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>プロンプトテンプレート</label>
+                        <textarea id="planPrompt" rows="6" placeholder="変数: {birthday}=生年月日, {external_data}=外部データ, {name-l}=姓, {name-f}=名"></textarea>
+                        <small>メール本文とNOTE記事の両方で使用されます</small>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>使用モデル</label>
+                        <select id="planModel">
+                            <option value="gpt-4o">GPT-4o（推奨）</option>
+                            <option value="gpt-4o-mini">GPT-4o-mini（高速）</option>
+                            <option value="o1">o1（推論モデル）</option>
+                            <option value="o1-mini">o1-mini</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>外部データ読み込み（オプション）</label>
+                        <input type="text" id="externalDataPath" placeholder="例: keiba/ozz または keiba">
+                        <small>Firestoreのコレクション/ドキュメントを指定。プロンプト内で{external_data}として利用可能</small>
+                    </div>
+                    
+                    <div style="border: 1px solid #ddd; padding: 15px; margin: 20px 0;">
+                        <h3 style="margin-bottom: 15px;">メール自動送信設定</h3>
+                        <div class="form-group">
+                            <label>
+                                <input type="checkbox" id="emailEnabled"> メール自動送信を有効にする
+                            </label>
+                        </div>
+                        <div id="emailFields" class="hidden">
+                            <div class="form-group">
+                                <label>送信時刻</label>
+                                <input type="time" id="emailSendTime" value="09:00">
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div style="border: 1px solid #ddd; padding: 15px; margin: 20px 0;">
+                        <h3 style="margin-bottom: 15px;">NOTE自動投稿設定</h3>
+                        <div class="form-group">
+                            <label>
+                                <input type="checkbox" id="noteEnabled"> NOTE自動投稿を有効にする
+                            </label>
+                        </div>
+                        <div id="noteFields" class="hidden">
+                            <div class="form-group">
+                                <label>投稿時刻</label>
+                                <input type="time" id="notePostTime" value="09:00">
+                            </div>
+                            <div class="form-group">
+                                <label>サムネイル画像URLマッピング（オプション）</label>
+                                <textarea id="thumbnailMapping" rows="4" placeholder="東京=https://example.com/tokyo.jpg&#10;大阪=https://example.com/osaka.jpg"></textarea>
+                                <small>key=value形式で改行区切り。記事ごとに動的に画像URLを選択できます</small>
+                            </div>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" id="closePlanModalBtn2">キャンセル</button>
+                <button class="btn" id="savePlanBtn">保存</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- プラン詳細モーダル -->
+    <div id="planDetailModal" class="modal">
+        <div class="modal-content" style="max-width: 900px;">
+            <div class="modal-header">
+                <h2 id="planDetailTitle">プラン詳細</h2>
+                <button class="close-btn" id="closePlanDetailBtn">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div id="planDetailInfo" style="margin-bottom: 20px;"></div>
+                
+                <h3 style="margin-bottom: 15px; padding-bottom: 10px; border-bottom: 2px solid #000;">加入者一覧</h3>
+                
+                <div class="form-group" style="max-width: 400px; margin-bottom: 20px;">
+                    <label>検索（名前・会員番号）</label>
+                    <input type="text" id="planCustomerSearch" placeholder="山田太郎 または NOTE-2024-0001">
+                </div>
+                
+                <div class="table-container">
+                    <table id="planCustomersTable">
+                        <thead>
+                            <tr>
+                                <th>会員番号</th>
+                                <th>氏名</th>
+                                <th>メールアドレス</th>
+                                <th>登録日</th>
+                                <th>操作</th>
+                            </tr>
+                        </thead>
+                        <tbody></tbody>
+                    </table>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="editPlanFromDetail()" id="editPlanFromDetailBtn">編集</button>
+                <button class="btn btn-secondary" id="closePlanDetailBtn2">閉じる</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- スタッフ追加/編集モーダル -->
+    <div id="staffModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="staffModalTitle">スタッフ追加</h2>
+                <button class="close-btn" id="closeStaffModalBtn">&times;</button>
+            </div>
+            <div class="modal-body">
+                <form id="staffForm">
+                    <input type="hidden" id="staffId">
+                    <div class="form-group">
+                        <label>氏名</label>
+                        <input type="text" id="staffName" required>
+                    </div>
+                    <div class="form-group">
+                        <label>メールアドレス</label>
+                        <input type="email" id="staffEmail" required>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" id="closeStaffModalBtn2">キャンセル</button>
+                <button class="btn" id="saveStaffBtn">保存</button>
+            </div>
+        </div>
+    </div>
+    
+    <script src="script.js"></script>
+</body>
+</html>
