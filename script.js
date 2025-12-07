@@ -124,9 +124,19 @@ function toggleEmailFields() {
     document.getElementById('emailFields').classList.toggle('hidden', !enabled);
 }
 
+function toggleEmailCustomFields() {
+    const frequency = document.getElementById('emailFrequency').value;
+    document.getElementById('emailCustomFields').classList.toggle('hidden', frequency !== 'custom');
+}
+
 function toggleNoteFields() {
     const enabled = document.getElementById('noteEnabled').checked;
     document.getElementById('noteFields').classList.toggle('hidden', !enabled);
+}
+
+function toggleNoteCustomFields() {
+    const frequency = document.getElementById('noteFrequency').value;
+    document.getElementById('noteCustomFields').classList.toggle('hidden', frequency !== 'custom');
 }
 
 // ステータステキスト取得
@@ -398,11 +408,26 @@ async function loadPlans() {
             planCard.className = 'plan-card';
             planCard.style.cursor = 'pointer';
             
+            let emailInfo = '無効';
+            if (plan.emailEnabled) {
+                emailInfo = plan.emailFrequency === 'custom' 
+                    ? `有効（カスタム日付, ${plan.emailSendTime}）`
+                    : `有効（毎日 ${plan.emailSendTime}）`;
+            }
+            
+            let noteInfo = '無効';
+            if (plan.noteEnabled) {
+                noteInfo = plan.noteFrequency === 'custom'
+                    ? `有効（カスタム日付, ${plan.notePostTime}）`
+                    : `有効（毎日 ${plan.notePostTime}）`;
+            }
+            
             let details = `
                 <p><strong>モデル:</strong> ${plan.model || 'gpt-4o'}</p>
                 <p><strong>外部データ:</strong> ${plan.externalDataPath || 'なし'}</p>
-                <p><strong>メール送信:</strong> ${plan.emailEnabled ? `有効（${plan.emailSendTime}）` : '無効'}</p>
-                <p><strong>NOTE投稿:</strong> ${plan.noteEnabled ? `有効（${plan.notePostTime}）` : '無効'}</p>
+                <p><strong>メール送信:</strong> ${emailInfo}</p>
+                <p><strong>NOTE投稿:</strong> ${noteInfo}</p>
+                ${plan.noteEmail ? '<p><strong>NOTE専用アカウント:</strong> 設定済み</p>' : ''}
             `;
             
             planCard.innerHTML = `
@@ -434,6 +459,20 @@ async function showPlanDetail(planId) {
         
         const planDetailInfo = document.getElementById('planDetailInfo');
         
+        let emailInfo = '無効';
+        if (plan.emailEnabled) {
+            emailInfo = plan.emailFrequency === 'custom'
+                ? `有効（カスタム日付: ${plan.emailCustomSpreadsheetId || '未設定'}, ${plan.emailSendTime}）`
+                : `有効（毎日 ${plan.emailSendTime}）`;
+        }
+        
+        let noteInfo = '無効';
+        if (plan.noteEnabled) {
+            noteInfo = plan.noteFrequency === 'custom'
+                ? `有効（カスタム日付: ${plan.noteCustomSpreadsheetId || '未設定'}, ${plan.notePostTime}）`
+                : `有効（毎日 ${plan.notePostTime}）`;
+        }
+        
         let detailsHTML = `
             <div class="info-row">
                 <div class="info-label">プラン名:</div>
@@ -449,12 +488,18 @@ async function showPlanDetail(planId) {
             </div>
             <div class="info-row">
                 <div class="info-label">メール自動送信:</div>
-                <div class="info-value">${plan.emailEnabled ? `有効（${plan.emailSendTime}）` : '無効'}</div>
+                <div class="info-value">${emailInfo}</div>
             </div>
             <div class="info-row">
                 <div class="info-label">NOTE自動投稿:</div>
-                <div class="info-value">${plan.noteEnabled ? `有効（${plan.notePostTime}）` : '無効'}</div>
+                <div class="info-value">${noteInfo}</div>
             </div>
+            ${plan.noteEmail ? `
+            <div class="info-row">
+                <div class="info-label">NOTE専用アカウント:</div>
+                <div class="info-value">${plan.noteEmail}</div>
+            </div>
+            ` : ''}
             <div class="info-row">
                 <div class="info-label">プロンプト:</div>
                 <div class="info-value" style="white-space: pre-wrap;">${plan.prompt || ''}</div>
@@ -530,15 +575,25 @@ async function editPlan(id) {
         document.getElementById('planModel').value = plan.model || 'gpt-4o';
         document.getElementById('externalDataPath').value = plan.externalDataPath || '';
         
+        // メール設定
         document.getElementById('emailEnabled').checked = plan.emailEnabled || false;
+        document.getElementById('emailFrequency').value = plan.emailFrequency || 'daily';
         document.getElementById('emailSendTime').value = plan.emailSendTime || '09:00';
+        document.getElementById('emailCustomSpreadsheetId').value = plan.emailCustomSpreadsheetId || '';
         
+        // NOTE設定
         document.getElementById('noteEnabled').checked = plan.noteEnabled || false;
+        document.getElementById('planNoteEmail').value = plan.noteEmail || '';
+        document.getElementById('planNotePassword').value = plan.notePassword || '';
+        document.getElementById('noteFrequency').value = plan.noteFrequency || 'daily';
         document.getElementById('notePostTime').value = plan.notePostTime || '09:00';
+        document.getElementById('noteCustomSpreadsheetId').value = plan.noteCustomSpreadsheetId || '';
         document.getElementById('thumbnailMapping').value = plan.thumbnailMapping || '';
         
         toggleEmailFields();
+        toggleEmailCustomFields();
         toggleNoteFields();
+        toggleNoteCustomFields();
         
         document.getElementById('planModal').classList.add('active');
     } catch (error) {
@@ -561,11 +616,19 @@ async function savePlan() {
     const prompt = document.getElementById('planPrompt').value;
     const model = document.getElementById('planModel').value;
     const externalDataPath = document.getElementById('externalDataPath').value;
+    
     const emailEnabled = document.getElementById('emailEnabled').checked;
+    const emailFrequency = document.getElementById('emailFrequency').value;
     const emailSendTime = document.getElementById('emailSendTime').value;
+    const emailCustomSpreadsheetId = document.getElementById('emailCustomSpreadsheetId').value;
+    
     const noteEnabled = document.getElementById('noteEnabled').checked;
+    const noteFrequency = document.getElementById('noteFrequency').value;
     const notePostTime = document.getElementById('notePostTime').value;
+    const noteCustomSpreadsheetId = document.getElementById('noteCustomSpreadsheetId').value;
     const thumbnailMapping = document.getElementById('thumbnailMapping').value;
+    const planNoteEmail = document.getElementById('planNoteEmail').value;
+    const planNotePassword = document.getElementById('planNotePassword').value;
 
     if (!name) {
         alert('プラン名を入力してください');
@@ -582,12 +645,22 @@ async function savePlan() {
     };
     
     if (emailEnabled) {
+        data.emailFrequency = emailFrequency;
         data.emailSendTime = emailSendTime;
+        if (emailFrequency === 'custom') {
+            data.emailCustomSpreadsheetId = emailCustomSpreadsheetId;
+        }
     }
     
     if (noteEnabled) {
+        data.noteFrequency = noteFrequency;
         data.notePostTime = notePostTime;
         data.thumbnailMapping = thumbnailMapping;
+        data.noteEmail = planNoteEmail;
+        data.notePassword = planNotePassword;
+        if (noteFrequency === 'custom') {
+            data.noteCustomSpreadsheetId = noteCustomSpreadsheetId;
+        }
     }
 
     try {
@@ -1018,7 +1091,9 @@ document.addEventListener('DOMContentLoaded', async function() {
 
     // チェックボックスの変更イベント
     document.getElementById('emailEnabled').addEventListener('change', toggleEmailFields);
+    document.getElementById('emailFrequency').addEventListener('change', toggleEmailCustomFields);
     document.getElementById('noteEnabled').addEventListener('change', toggleNoteFields);
+    document.getElementById('noteFrequency').addEventListener('change', toggleNoteCustomFields);
 
     // フィルターボタン
     document.querySelectorAll('#statusFilters .filter-btn').forEach(btn => {
